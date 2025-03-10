@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"strconv"
 	"strings"
 
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"go-login/backend/models"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -219,4 +221,54 @@ func FetchClients(w http.ResponseWriter, r *http.Request) {
 		log.Printf("JSON encoding error: %v", err)
 		http.Error(w, "JSON dönüştürme hatası", http.StatusInternalServerError)
 	}
+}
+
+// Kullanıcı Silme (Delete User)
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	// Sadece DELETE isteklerini kabul et
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Geçersiz istek türü", http.StatusMethodNotAllowed)
+		return
+	}
+	// URL yolundan kullanıcı ID'sini al
+	vars := mux.Vars(r)
+	idStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "Kullanıcı ID'si belirtilmemiş", http.StatusBadRequest)
+		return
+	}
+
+	// ID'yi tam sayıya çevir
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Geçersiz kullanıcı ID'si", http.StatusBadRequest)
+		return
+	}
+
+	// Kullanıcıyı veritabanından sil
+	query := `DELETE FROM users WHERE id = $1`
+	result, err := database.DB.Exec(query, userID)
+	if err != nil {
+		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Etkilenen satır sayısını kontrol et
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rowsAffected == 0 {
+		http.Error(w, "Kullanıcı bulunamadı", http.StatusNotFound)
+		return
+	}
+
+	// Başarılı yanıt
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Kullanıcı başarıyla silindi",
+	})
+
 }

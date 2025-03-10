@@ -29,6 +29,9 @@ func SetupRoutes(router *mux.Router) {
 	// Admin tarafında kullanıcıları gösterme
 	router.HandleFunc("/clients", controllers.FetchClients).Methods("GET")
 
+	// Client(User) silme
+	router.HandleFunc("/delete/{id}", controllers.DeleteUser).Methods("DELETE")
+
 	// Deneme (Profil)
 	//router.HandleFunc("/deneme", controllers.updateUser()).Methods("POST")
 
