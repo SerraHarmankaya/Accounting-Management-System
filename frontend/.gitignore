@@ -1,0 +1,33 @@
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
+
+# Node.js modülleri
+node_modules/
+
+# Quasar'ın oluşturduğu dosyalar ve dizinler
+.quasar/
+dist/
+
+# Cordova ile ilgili dosyalar
+src-cordova/
+
+# Capacitor ile ilgili dosyalar
+src-capacitor/
+
+# BEX ile ilgili dosyalar
+src-bex/
+
+# Log dosyaları
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editör ve IDE dosyaları
+.idea/
+.vscode/
+*.sublime*
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

@@ -1,0 +1,30 @@
+import { useAuthStore } from 'stores/auth'
+import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import axios from 'axios'
+
+const authStore = useAuthStore()
+const router = useRouter()
+const username = ref('')
+const password = ref('')
+const errorMessage = ref('')
+
+const login = async () => {
+  try {
+    const response = await axios.post('http://localhost:9000/login', {
+      username: username.value,
+      password: password.value,
+    })
+
+    const token = response.data.token
+
+    if (token) {
+      localStorage.setItem('token', token) // Token'ı kaydet
+      authStore.login() // Pinia store güncelle
+      router.push('/dashboard') // Kullanıcıyı yönlendir
+    }
+  } catch (error) {
+    errorMessage.value = 'Giriş başarısız! Kullanıcı adı veya şifre hatalı.'
+    console.error(error)
+  }
+}
