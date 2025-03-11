@@ -190,7 +190,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rowsAffected == 0 {
-		http.Error(w, "Kullanıcı bulunamadı", http.StatusNotFound)
+		http.Error(w, "Kullanıcı bulunamadı", http.StatusBadRequest)
 		return
 	}
 
