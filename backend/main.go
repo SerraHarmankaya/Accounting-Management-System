@@ -34,6 +34,7 @@ func main() {
 	port := "9000"
 	fmt.Println("🚀 Server is running on port 9000")
 	log.Fatal(http.ListenAndServe(":"+port, handler))
+
 }
 
 // // PostgreSQL bağlantı dizesi

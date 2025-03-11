@@ -150,6 +150,7 @@ func FetchUserTickets(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Authorization header bulunamadı", http.StatusUnauthorized)
 		return
 	}
+
 	// "Bearer " kısmını kaldırarak token'ı al
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
@@ -169,8 +170,10 @@ func FetchUserTickets(w http.ResponseWriter, r *http.Request) {
 	// Kullanıcı emailini claims'den alıyoruz
 	userEmail := claims.Email // Bu değeri, token'dan çıkararak kullanıcının emailini alıyoruz
 
+	log.Print(userEmail)
+
 	// Veritabanından kullanıcının ticket'larını alacak sorgu
-	rows, err := database.DB.Query(`SELECT id, title, content, created_at, status, created_by FROM tickets WHERE created_by = (SELECT id FROM users WHERE email = $1)`, userEmail)
+	rows, err := database.DB.Query(`SELECT id, title, content, created_at, status FROM tickets WHERE created_by = (SELECT id FROM users WHERE email = $1)`, userEmail)
 	if err != nil {
 		log.Printf("Veritabanı sorgu hatası: %v", err)
 		http.Error(w, "Veritabanı hatası", http.StatusInternalServerError)
@@ -181,7 +184,7 @@ func FetchUserTickets(w http.ResponseWriter, r *http.Request) {
 	var tickets []models.Ticket
 	for rows.Next() {
 		var ticket models.Ticket
-		if err := rows.Scan(&ticket.ID, &ticket.Title, &ticket.Content, &ticket.CreatedAt, &ticket.Status, &ticket.CreatedBy); err != nil {
+		if err := rows.Scan(&ticket.ID, &ticket.Title, &ticket.Content, &ticket.CreatedAt, &ticket.Status); err != nil {
 			http.Error(w, "Ticket verisi alınırken hata oluştu", http.StatusInternalServerError)
 			return
 		}

@@ -27,7 +27,7 @@
     <q-drawer v-if="isAuthenticated" v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label class="text-h6" header>
-          <q-img src="mini.png" width="120px" class="q-mb-lg" />
+          <q-img src="../../public/apple.png" width="120px" class="q-mb-lg" />
           <br />
           Essential Links
           <br />

@@ -1,133 +1,158 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="column q-gutter-md">
-      <q-btn @click="FetchUserTickets" push color="grey-6" label="LIST USER TICKETS" />
-      <q-btn
-        @click="exportToExcel"
-        push
-        color="accent"
-        label="EXPORT TO EXCEL"
-        icon="save_alt"
-      />
+  <q-page padding>
+    <q-table
+      flat
+      bordered
+      title="Ticket Listesi"
+      :rows="tickets"
+      :columns="columns"
+      row-key="id"
 
-      <q-table
-        class="q-mt-md"
-        flat
-        bordered
-        title="Tickets"
-        :rows="tickets"
-        :columns="columns"
-        row-key="id"
-      >
-        <template v-slot:body-cell-status="props">
+    >
+    <template v-slot:body-cell-status="props">
           <q-td :props="props">
             <q-chip :color="getStatusColor(props.row.status)" text-color="white">
               {{ props.row.status }}
             </q-chip>
           </q-td>
         </template>
-      </q-table>
-    </div>
+
+    </q-table>
   </q-page>
 </template>
 
 <script>
+import { ref, onMounted } from "vue";
 import axios from "axios";
-import * as XLSX from "xlsx"; // SheetJS kütüphanesini içe aktar
+import * as XLSX from "xlsx"; // SheetJS kütüphanesi
+import { useQuasar } from "quasar";
 
 export default {
-  data() {
-    return {
-      columns: [
-        {
-          name: "id",
-          label: "Ticket ID",
-          align: "left",
-          field: (row) => row.id,
-          sortable: true,
-        },
-        { name: "title", label: "Title", align: "left", field: "title", sortable: true },
-        { name: "content", label: "Content", align: "left", field: "content" },
-        {
-          name: "status",
-          label: "Status",
-          align: "center",
-          field: "status",
-          sortable: true,
-        },
-        { name: "created_by", label: "Created By", align: "left", field: "created_by" },
-      ],
-      message: "",
-      title: "",
-      content: "",
-      status: "",
-      tickets: [],
-    };
-  },
-  methods: {
-    async FetchUserTickets() {
+  setup() {
+    const $q = useQuasar();
+    const tickets = ref([]);
+    const dialogVisible = ref(false);
+    const selectedTicketId = ref(null);
+
+    // Kullanıcının Ticket'larını Getir
+    const fetchUserTickets = async () => {
       try {
-        const token = localStorage.getItem("token"); // Kullanıcının giriş yaparken aldığı token
-        console.log("token: ", token);
+        const token = localStorage.getItem("token");
+        console.log("Token:", token);
+
         if (!token) {
           console.log("Kullanıcı oturum açmamış, login sayfasına yönlendiriliyor...");
-          this.$router.push("/login"); // Kullanıcıyı giriş sayfasına yönlendir
+          window.location.href = "/login";
           return;
         }
+
         const response = await axios.get("http://localhost:9000/user/tickets", {
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // JWT token ekleniyor
+            Authorization: `Bearer ${token}`,
           },
         });
+
         if (response.status === 200) {
-          this.tickets = response.data; // Gelen ticket'ları bir değişkene atıyoruz
-          console.log("Kullanıcının ticketları:", this.tickets);
+          tickets.value = response.data;
+          console.log("Kullanıcının ticket'ları:", tickets.value);
         } else {
-          this.$q.notify({ type: "negative", message: "Ticketlar alınamadı!" });
+          $q.notify({ type: "negative", message: "Ticketlar alınamadı!" });
         }
       } catch (error) {
-        // Hata mesajı
         console.error(
           "Ticketları alma hatası:",
           error.response ? error.response.data : error.message
         );
-        this.$q.notify({ type: "negative", message: "Bir hata oluştu!" });
+        $q.notify({ type: "negative", message: "Bir hata oluştu!" });
       }
-    },
-    // Excel çıktısı alma fonksiyonu
-    exportToExcel() {
-      if (this.tickets.length === 0) {
-        this.$q.notify({ type: "negative", message: "Hiç ticket verisi bulunamadı." });
+    };
+
+    // Excel Çıktısı Alma Fonksiyonu
+    const exportToExcel = () => {
+      if (tickets.value.length === 0) {
+        $q.notify({ type: "negative", message: "Hiç ticket verisi bulunamadı." });
         console.warn("Hiç ticket verisi bulunamadı.");
         return;
       }
 
       // JSON verisini Excel formatına dönüştür
-      const worksheet = XLSX.utils.json_to_sheet(this.tickets);
+      const worksheet = XLSX.utils.json_to_sheet(tickets.value);
 
-      // Yeni bir çalışma kitabı (Workbook) oluştur
+      // Yeni bir çalışma kitabı oluştur
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
 
       // Excel dosyasını indir
       XLSX.writeFile(workbook, "ticket-listesi.xlsx");
 
-      this.$q.notify({ type: "positive", message: "Excel dosyası başarıyla indirildi!" });
+      $q.notify({ type: "positive", message: "Excel dosyası başarıyla indirildi!" });
       console.log("Excel dosyası başarıyla indirildi!");
-    },
-    getStatusColor(status) {
+    };
+
+    // Ticket Silme Fonksiyonu
+    const deleteByID = async () => {
+      try {
+        await axios.delete(`http://localhost:9000/delete/${selectedTicketId.value}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        $q.notify({ type: "positive", message: "Kullanıcı başarıyla silindi!" });
+
+        // Listeyi güncelle
+        fetchUserTickets();
+      } catch (error) {
+        $q.notify({
+          type: "negative",
+          message: `Kullanıcı silinirken hata oluştu: ${error.message}`,
+        });
+        console.error("Silme Hatası:", error);
+      } finally {
+        dialogVisible.value = false;
+        selectedTicketId.value = null;
+      }
+    };
+
+    // Status'e göre renk belirleyen fonksiyon
+    const getStatusColor = (status) => {
+      if (!status) return "grey"; // Null veya undefined gelirse
       switch (status.toLowerCase()) {
         case "open":
           return "blue";
-        case "in progress":
+        case "ongoing":
           return "orange";
         case "closed":
           return "green";
+        case "pending":
+          return "yellow";
+        case "canceled":
+          return "red";
         default:
           return "grey";
       }
-    },
+    };
+
+    // Silme işlemi için onay diyaloğunu açma fonksiyonu
+    const confirmDelete = (id) => {
+      selectedTicketId.value = id;
+      dialogVisible.value = true;
+    };
+
+    // Tablo Sütunları
+    const columns = [
+      { name: "id", label: "ID", align: "left", field: (row) => row.id, sortable: true },
+      { name: "title", label: "TITLE", align: "left", field: "title", sortable: true },
+      { name: "content", label: "CONTENT", align: "left", field: "content" },
+      { name: "status", label: "STATUS", align: "center", field: "status", sortable: true },
+      { name: "actions", label: "DELETE", align: "center" },
+    ];
+
+    // Sayfa yüklendiğinde verileri çek
+    onMounted(fetchUserTickets);
+
+    return { tickets, columns, fetchUserTickets, exportToExcel, confirmDelete, deleteByID, dialogVisible, getStatusColor };
   },
 };
-</script> 
+</script>
+
