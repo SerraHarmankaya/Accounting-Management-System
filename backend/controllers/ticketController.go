@@ -10,6 +10,7 @@ import (
 	"go-login/backend/models"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 
 	"go-login/backend/database"
 )
@@ -111,7 +112,7 @@ func GetAllTickets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Veritabanından tüm ticket'ları alacak sorgu
-	rows, err := database.DB.Query(`SELECT id, title, content, created_at, status, created_by FROM tickets`)
+	rows, err := database.DB.Query(`SELECT id, title, content, created_at, status, created_by FROM tickets ORDER BY id`)
 	if err != nil {
 		http.Error(w, "Veritabanı hatası", http.StatusInternalServerError)
 		return
@@ -191,6 +192,78 @@ func FetchUserTickets(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tickets)
+}
+
+func PatchTicketStatus(w http.ResponseWriter, r *http.Request) {
+	// Yalnızca GET isteği kabul edilir
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Geçersiz istek türü", http.StatusMethodNotAllowed)
+		return
+	}
+	// Authorization header'dan token alınır
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header bulunamadı", http.StatusUnauthorized)
+		return
+	}
+	// "Bearer " kısmını kaldırarak token'ı al
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// Token doğrulama ve Claims oluşturma
+	claims, err := parseToken(tokenString)
+	if err != nil {
+		http.Error(w, "Geçersiz token", http.StatusUnauthorized)
+		return
+	}
+
+	// Kullanıcı rolünü kontrol et, sadece admin rolü erişebilir
+	if claims.Role != "admin" {
+		http.Error(w, "Yalnızca admin status degistirebilir!", http.StatusForbidden)
+		return
+	}
+
+	// Gelen JSON verisini çöz
+	var requestData struct {
+		Status string `json:"status"`
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Geçersiz JSON formatı", http.StatusBadRequest)
+		return
+	}
+
+	// Status değerinin geçerli olup olmadığını kontrol et
+	validStatuses := map[string]bool{
+		"open":     true,
+		"ongoing":  true,
+		"closed":   true,
+		"pending":  true,
+		"canceled": true,
+	}
+
+	if !validStatuses[strings.ToLower(requestData.Status)] {
+		http.Error(w, "Geçersiz status değeri", http.StatusBadRequest)
+		return
+	}
+	// URL parametresinden ticket_id al
+	vars := mux.Vars(r)
+	ticketID := vars["id"] // URL'de "/tickets/{id}" formatında olmalı
+
+	// Veritabanında ilgili ticket'in status değerini güncelle
+	query := `UPDATE tickets SET status = $1 WHERE id = $2`
+	_, err = database.DB.Exec(query, requestData.Status, ticketID)
+	if err != nil {
+		log.Printf("Veritabanı güncelleme hatası: %v", err)
+		http.Error(w, "Status güncellenirken hata oluştu", http.StatusInternalServerError)
+		return
+	}
+
+	// Başarı mesajı dön
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Ticket status başarıyla güncellendi!"})
 }
 
 // Token'ı çözme ve claims elde etme

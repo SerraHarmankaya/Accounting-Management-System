@@ -29,6 +29,8 @@ func SetupRoutes(router *mux.Router) {
 	// Admin tarafında ticketlari gösterme
 	router.HandleFunc("/clients/ticket", controllers.GetAllTickets).Methods("GET")
 
+	router.HandleFunc("/status/{id}", controllers.PatchTicketStatus).Methods("PATCH")
+
 	// Client(User) silme
 	router.HandleFunc("/delete/{id}", controllers.DeleteUser).Methods("DELETE")
 

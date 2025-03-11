@@ -112,16 +112,21 @@ export default {
       }
     }
 
+
       // Status'e göre renk belirleyen fonksiyon
       const getStatusColor = (status) => {
       if (!status) return 'grey' // Null veya undefined gelirse
       switch (status.toLowerCase()) {
         case 'open':
           return 'blue'
-        case 'in progress':
+        case 'ongoing':
           return 'orange'
         case 'closed':
           return 'green'
+        case 'pending':
+          return 'yellow'
+        case 'canceled':
+          return 'red'
         default:
           return 'grey'
       }
@@ -133,6 +138,9 @@ export default {
       dialogVisible.value = true
     }
 
+  
+
+
     // Tablo Sütunları
     const columns = [
       { name: 'id', label: 'ID', align: 'left', field: (row) => row.id, sortable: true },
@@ -143,7 +151,7 @@ export default {
       { name: 'actions', label: 'DELETE', align: 'center' }
     ]
 
-    return { tickets, columns, confirmDelete, deleteByID, dialogVisible, getStatusColor }
+    return { tickets, columns, confirmDelete, deleteByID, dialogVisible, getStatusColor}
   },
 }
 </script>
