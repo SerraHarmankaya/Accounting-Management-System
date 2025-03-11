@@ -3,11 +3,20 @@
     <q-table
       flat
       bordered
-      title="Müşteri Listesi"
-      :rows="clients"
+      title="Ticket Listesi"
+      :rows="tickets"
       :columns="columns"
       row-key="id"
+
     >
+    <template v-slot:body-cell-status="props">
+          <q-td :props="props">
+            <q-chip :color="getStatusColor(props.row.status)" text-color="white">
+              {{ props.row.status }}
+            </q-chip>
+          </q-td>
+        </template>
+
       <template #body-cell-actions="props">
         <q-td :props="props">
           <q-btn
@@ -18,6 +27,7 @@
             flat
             @click="confirmDelete(props.row.id)"
           />
+          
         </q-td>
       </template>
     </q-table>
@@ -26,8 +36,8 @@
     <q-dialog v-model="dialogVisible">
       <q-card>
         <q-card-section class="row items-center">
-          <q-avatar icon="warning" color="orange" text-color="white" />
-          <span class="q-ml-sm">Bu kullanıcıyı silmek istediğinize emin misiniz?</span>
+          <q-avatar icon="warning" color="red" text-color="white" />
+          <span class="q-ml-sm">Bu ticket'i silmek istediğinize emin misiniz?</span>
         </q-card-section>
 
         <q-card-actions align="right">
@@ -48,34 +58,38 @@ import { useQuasar } from 'quasar'
 export default {
   setup() {
     const $q = useQuasar()
-    const clients = ref([])
+    const tickets = ref([])
     const dialogVisible = ref(false)
-    const selectedUserId = ref(null)
+    const selectedTicketId = ref(null)
 
     // API'den veri çekme fonksiyonu
-    const fetchClients = async () => {
+    const fetchTickets = async () => {
       try {
-        const response = await axios.get('http://localhost:9000/clients/list', {
+        const response = await axios.get('http://localhost:9000/clients/ticket', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         })
-        clients.value = response.data
+
+        
+        tickets.value = response.data
       } catch (error) {
         $q.notify({
           type: 'negative',
           message: 'Veriler alınırken hata oluştu!',
+          
         })
         console.error('API Hatası:', error)
       }
     }
+    
 
-    onMounted(fetchClients)
+    onMounted(fetchTickets)
 
     // Kullanıcı silme fonksiyonu
     const deleteByID = async () => {
       try {
-        await axios.delete(`http://localhost:9000/delete/${selectedUserId.value}`, {
+        await axios.delete(`http://localhost:9000/delete/${selectedTicketId.value}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -85,7 +99,7 @@ export default {
           message: 'Kullanıcı başarıyla silindi!',
         })
         // Kullanıcı listesini güncelle
-        fetchClients()
+        fetchTickets()
       } catch (error) {
         $q.notify({
           type: 'negative',
@@ -94,26 +108,42 @@ export default {
         console.error('Silme Hatası:', error)
       } finally {
         dialogVisible.value = false
-        selectedUserId.value = null
+        selectedTicketId.value = null
+      }
+    }
+
+      // Status'e göre renk belirleyen fonksiyon
+      const getStatusColor = (status) => {
+      if (!status) return 'grey' // Null veya undefined gelirse
+      switch (status.toLowerCase()) {
+        case 'open':
+          return 'blue'
+        case 'in progress':
+          return 'orange'
+        case 'closed':
+          return 'green'
+        default:
+          return 'grey'
       }
     }
 
     // Silme işlemi için onay diyaloğunu açma fonksiyonu
     const confirmDelete = (id) => {
-      selectedUserId.value = id
+      selectedTicketId.value = id
       dialogVisible.value = true
     }
 
     // Tablo Sütunları
     const columns = [
       { name: 'id', label: 'ID', align: 'left', field: (row) => row.id, sortable: true },
-      { name: 'name', label: 'Adı', align: 'left', field: 'name', sortable: true },
-      { name: 'email', label: 'E-Posta', align: 'left', field: 'email' },
-      { name: 'role', label: 'Rol', align: 'center', field: 'role', sortable: true },
-      { name: 'actions', label: 'İşlemler', align: 'center' }
+      { name: 'title', label: 'TITLE', align: 'left', field: 'title', sortable: true },
+      { name: 'content', label: 'CONTENT', align: 'left', field: 'content' },
+      { name: 'status', label: 'STATUS', align: 'center', field: 'status', sortable: true },
+      { name: 'created_by', label: 'CREATED BY', align: 'center', field: 'created_by', sortable: true },
+      { name: 'actions', label: 'DELETE', align: 'center' }
     ]
 
-    return { clients, columns, confirmDelete, deleteByID, dialogVisible }
+    return { tickets, columns, confirmDelete, deleteByID, dialogVisible, getStatusColor }
   },
 }
 </script>

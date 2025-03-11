@@ -27,7 +27,7 @@
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label class="text-h6" header>
-          <q-img src="apple.png" width="120px" class="q-mb-lg" />
+          <q-img src="../../public/apple.png" width="120px" class="q-mb-lg" />
           <br />
           Essential Links
           <br />
@@ -160,7 +160,7 @@ const linksList = [
     link: '/clients',
     children: [
       { title: 'List Clients', link: '/clients/list', icon: 'groups' },
-      { title: 'Sub 2', link: '/settings/sub2', icon: 'groups' },
+      { title: 'Client Tickets', link: '/clients/ticket', icon: 'groups' },
     ],
   },
   {

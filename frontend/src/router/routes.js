@@ -46,7 +46,9 @@ const routes = [
       { path: 'admin-page', component: () => import('src/pages/AdminPage.vue') },
       { path: 'settings', component: () => import('src/pages/SettingsPage.vue') },
       { path: 'clients/list', component: () => import('src/pages/CustomersPage.vue') },
+      { path: 'clients/ticket', component: () => import('src/pages/AdminTicketPage.vue') },
       { path: 'admin/settings', component: () => import('src/pages/SettingsPage.vue') },
+      
     ],
   },
 

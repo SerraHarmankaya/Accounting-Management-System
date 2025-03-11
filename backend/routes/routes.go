@@ -20,14 +20,14 @@ func SetupRoutes(router *mux.Router) {
 	// User kendi ticketlarini goruntuleme
 	router.HandleFunc("/user/tickets", controllers.FetchUserTickets).Methods("GET")
 
-	// Admin ticket goruntuleme
-	router.HandleFunc("/admin-page", controllers.GetAllTickets).Methods("GET")
-
 	// Check Auth token
 	router.HandleFunc("/auth-check", controllers.AuthCheckHandler).Methods("GET")
 
 	// Admin tarafında kullanıcıları gösterme
-	router.HandleFunc("/clients", controllers.FetchClients).Methods("GET")
+	router.HandleFunc("/clients/list", controllers.FetchClients).Methods("GET")
+
+	// Admin tarafında ticketlari gösterme
+	router.HandleFunc("/clients/ticket", controllers.GetAllTickets).Methods("GET")
 
 	// Client(User) silme
 	router.HandleFunc("/delete/{id}", controllers.DeleteUser).Methods("DELETE")
