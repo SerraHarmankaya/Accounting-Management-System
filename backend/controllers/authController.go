@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"go-login/backend/database"
-	"go-login/backend/models"
+	"Account-Management-System/backend/database"
+	"Account-Management-System/backend/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"

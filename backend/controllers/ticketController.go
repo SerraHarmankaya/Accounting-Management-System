@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strings"
 
-	"go-login/backend/models"
+	"Account-Management-System/backend/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 
-	"go-login/backend/database"
+	"Account-Management-System/backend/database"
 )
 
 // Ticket oluşturma fonksiyonu (Sadece "user" rolü için)

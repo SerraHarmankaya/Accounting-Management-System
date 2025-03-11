@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"go-login/backend/controllers"
+	"Account-Management-System/backend/controllers"
 
 	"github.com/gorilla/mux"
 )

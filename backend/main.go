@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"go-login/backend/database"
-	"go-login/backend/routes"
+	"Account-Management-System/backend/database"
+	"Account-Management-System/backend/routes"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"

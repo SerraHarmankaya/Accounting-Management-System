@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"Account-Management-System/backend/database"
+	"Account-Management-System/backend/models"
 	"encoding/json"
-	"go-login/backend/database"
-	"go-login/backend/models"
 	"log"
 	"net/http"
 	"strings"
