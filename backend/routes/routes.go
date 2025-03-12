@@ -12,7 +12,7 @@ func SetupRoutes(router *mux.Router) {
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
 
 	//http.HandleFunc("/register", controllers.CreateUser)
-	router.HandleFunc("/register", controllers.CreateUser).Methods("POST")
+	router.HandleFunc("/register", controllers.RegisterUser).Methods("POST")
 
 	// User ticket olusturma
 	router.HandleFunc("/create/user-tickets", controllers.CreateTicket).Methods("POST")

@@ -47,6 +47,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	err = database.DB.QueryRow(query, user.Email).Scan(&storedUser.ID, &storedUser.Name, &storedUser.Email, &storedUser.Password, &storedUser.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			if storedUser.Email != user.Email {
+				http.Error(w, "Email hatali", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "Kullanıcı bulunamadı", http.StatusUnauthorized)
 		} else {
 			http.Error(w, "Veritabanı hatası", http.StatusInternalServerError)
@@ -91,7 +95,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Yeni Kullanıcı Oluşturma (Create User)
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Geçersiz istek türü", http.StatusMethodNotAllowed)
 		return
@@ -101,6 +105,21 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, "Geçersiz JSON verisi", http.StatusBadRequest)
+		return
+	}
+
+	if user.Name == "" {
+		http.Error(w, "Isim bilgisi eksik. Lutfen gecerli bir isim girin", http.StatusBadRequest)
+		return
+	}
+
+	if user.Email == "" {
+		http.Error(w, "Email bilgisi eksik. Lutfen gecerli bir email girin", http.StatusBadRequest)
+		return
+	}
+
+	if user.Password == "" || len(user.Password) < 6 {
+		http.Error(w, "Sifre en az 6 karakterden olusmali", http.StatusBadRequest)
 		return
 	}
 
